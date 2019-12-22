@@ -4,6 +4,8 @@ from sklearn.naive_bayes import GaussianNB
 from sklearn.neural_network import MLPClassifier
 from sklearn.tree import DecisionTreeClassifier
 from sklearn.neighbors import KNeighborsClassifier
+from classifiers import REA
+from classifiers import OUSE
 
 # Basic function to run experiments of classification
 def classify(stream, clf):
@@ -16,6 +18,8 @@ def classify(stream, clf):
 clfs = [
     GaussianNB(),
     MLPClassifier(),
+    REA(),
+    OUSE(),
 ]
 
 # scores_ - to jest accuracy
@@ -28,6 +32,8 @@ for i in range(1000):
     stream = sl.streams.StreamGenerator(
         n_chunks=n_chunks,
         chunk_size=500,
+        weights=[0.3, 0.7],     # stationary imbalanced stream
+        # weights=(2, 5, 0.9),    # dynamically imbalanced stream - dla mgr'ki?
     )
 
     eval = classify(stream, clfs)
