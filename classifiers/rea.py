@@ -5,9 +5,10 @@ from sklearn.neighbors import KNeighborsClassifier
 from sklearn.preprocessing import LabelEncoder
 from sklearn.neighbors import NearestNeighbors
 import numpy as np
+from utils import minority_majority_name, minority_majority_split
 import math
 import warnings
-
+from sklearn.base import clone
 
 class REA(BaseEstimator):
 
@@ -50,7 +51,7 @@ class REA(BaseEstimator):
 
         res_X, res_y = self._resample(X, y)
 
-        new_classifier = self.base_classifier.fit(res_X, res_y)
+        new_classifier = clone(self.base_classifier).fit(res_X, res_y)
 
         self.classifier_array.append(new_classifier)
 
@@ -88,11 +89,14 @@ class REA(BaseEstimator):
 
             else:
                 knn = NearestNeighbors(n_neighbors=3).fit(X, y)
+
                 distance, indicies = knn.kneighbors(self.minority_data)
                 a = np.arange(0, len(distance))
                 distance = np.insert(distance, -1, a, axis=1)
                 distance = distance[distance[:, 0].argsort()]
                 new_minority = minority
+
+                # print(range(int(len(X) * 2 * (self.balance_ratio - ratio))))
                 for i in range(int(len(X) * 2 * (self.balance_ratio - ratio))):
                     try:
                         new_minority = np.insert(new_minority, -1, self.minority_data[int(distance[i][1])], axis=0)
@@ -120,60 +124,3 @@ class REA(BaseEstimator):
     def predict_proba(self, X):
         probas_ = [clf.predict_proba(X) for clf in self.classifier_array]
         return np.average(probas_, axis=0, weights=self.classifier_weights)
-
-
-
-def minority_majority_split(X, y, minority_name, majority_name):
-    """Returns minority and majority data
-
-    Parameters
-    ----------
-    X : array-like, shape = [n_samples, n_features]
-        The training input samples.
-    y : array-like, shape = [n_samples]
-        The target values.
-
-    Returns
-    -------
-    minority : array-like, shape = [n_samples, n_features]
-        Minority class samples.
-    majority : array-like, shape = [n_samples, n_features]
-        Majority class samples.
-    """
-
-    minority_ma = np.ma.masked_where(y == minority_name, y)
-    minority = X[minority_ma.mask]
-
-    majority_ma = np.ma.masked_where(y == majority_name, y)
-    majority = X[majority_ma.mask]
-
-    return minority, majority
-
-
-def minority_majority_name(y):
-    """Returns the name of minority and majority class
-
-    Parameters
-    ----------
-    y : array-like, shape = [n_samples]
-        The target values.
-
-    Returns
-    -------
-    minority_name : object
-        Name of minority class.
-    majority_name : object
-        Name of majority class.
-    """
-
-    unique, counts = np.unique(y, return_counts=True)
-    if len(counts) == 1:
-        raise ValueError("Only one class in procesed data. Use bigger data chunk")
-    elif counts[0] > counts[1]:
-        majority_name = unique[0]
-        minority_name = unique[1]
-    else:
-        majority_name = unique[1]
-        minority_name = unique[0]
-
-    return minority_name, majority_name
