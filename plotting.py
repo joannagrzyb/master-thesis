@@ -31,17 +31,18 @@ concept_kwargs = {
     "n_chunks": n_chunks,
     "chunk_size": 250,
     "n_classes": 2,
-    "random_state": 106,
-    "n_features": 10,
-    "n_drifts": 4,
+    # "random_state": 106,
+    "n_features": 2,
+    "n_drifts": 0,
     "n_informative": 2,
     "n_redundant": 0,
     "n_repeated": 0,
+    "weights": [0.1, 0.9],     # stationary imbalanced stream
+    # "weights": (1, 5, 0.9),    # dynamically imbalanced stream - do mgr'ki
 }
-
-# Dynamic imbalanced data stream
-stream = sl.streams.StreamGenerator(**concept_kwargs, weights=(1, 5, 0.9))
+stream = sl.streams.StreamGenerator(**concept_kwargs)
 
 plot_stream(
-    stream, "dynamic-imbalanced-stream", "Data stream with dynamically imbalanced drift"
-)
+    # stream, "dynamic-imbalanced-stream", "Data stream with dynamically imbalanced drift"
+    stream, "stationary-imbalanced-stream", "Data stream with stationary imbalanced drift"
+    )
