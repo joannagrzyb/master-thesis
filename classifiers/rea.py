@@ -1,14 +1,12 @@
-from sklearn import metrics
 from sklearn.base import BaseEstimator
-from sklearn.svm import SVC
 from sklearn.neighbors import KNeighborsClassifier
 from sklearn.preprocessing import LabelEncoder
 from sklearn.neighbors import NearestNeighbors
 import numpy as np
 from utils import minority_majority_name, minority_majority_split
 import math
-import warnings
 from sklearn.base import clone
+
 
 class REA(BaseEstimator):
 
@@ -34,15 +32,21 @@ class REA(BaseEstimator):
         self.iterator = 1
 
     def partial_fit(self, X, y, classes=None):
-        warnings.filterwarnings(action='ignore', category=DeprecationWarning)
         if classes is None and self.classes is None:
             self.label_encoder = LabelEncoder()
             self.label_encoder.fit(y)
-            self.classes_ = self.label_encoder.classes_
+            self.classes = self.label_encoder.classes
         elif self.classes is None:
             self.label_encoder = LabelEncoder()
             self.label_encoder.fit(classes)
             self.classes = classes
+
+        if classes[0] is "positive":
+            self.minority_name = self.label_encoder.transform(classes[0])
+            self.majority_name = self.label_encoder.transform(classes[1])
+        elif classes[1] is "positive":
+            self.minority_name = self.label_encoder.transform(classes[1])
+            self.majority_name = self.label_encoder.transform(classes[0])
 
         y = self.label_encoder.transform(y)
 
@@ -54,18 +58,26 @@ class REA(BaseEstimator):
         new_classifier = clone(self.base_classifier).fit(res_X, res_y)
 
         self.classifier_array.append(new_classifier)
+        if len(self.classifier_array) >= self.number_of_classifiers:
+            worst = np.argmin(self.classifier_weights)
+            del self.classifier_array[worst]
+            del self.classifier_weights[worst]
 
-        s1 = 1/float(len(X))
+        # s1 = 1/float(len(X))
         weights = []
         for clf in self.classifier_array:
             proba = clf.predict_proba(X)
             s2 = 0
             for i, x in enumerate(X):
-                probas = proba[i][y[i]]
+                try:
+                    probas = proba[i][y[i]]
+                except IndexError:
+                    probas = 0
                 s2 += math.pow((1 - probas), 2)
             if s2 == 0:
                 s2 = 0.00001
-            s3 = math.log(1/float(s1*s2))
+            s2 = s2/len(X)
+            s3 = math.log(1/s2)
             weights.append(s3)
 
         self.classifier_weights = weights
@@ -88,20 +100,27 @@ class REA(BaseEstimator):
                 new_minority = np.concatenate((minority, self.minority_data), axis=0)
 
             else:
-                knn = NearestNeighbors(n_neighbors=3).fit(X, y)
+                knn = NearestNeighbors(n_neighbors=10).fit(X)
 
-                distance, indicies = knn.kneighbors(self.minority_data)
-                a = np.arange(0, len(distance))
-                distance = np.insert(distance, -1, a, axis=1)
-                distance = distance[distance[:, 0].argsort()]
-                new_minority = minority
+                indices = knn.kneighbors(self.minority_data, return_distance=False)
 
-                # print(range(int(len(X) * 2 * (self.balance_ratio - ratio))))
-                for i in range(int(len(X) * 2 * (self.balance_ratio - ratio))):
-                    try:
-                        new_minority = np.insert(new_minority, -1, self.minority_data[int(distance[i][1])], axis=0)
-                    except IndexError:
-                        break
+                min_count = np.count_nonzero(y[indices] == self.minority_name, axis=1)
+
+                a = np.arange(0, len(min_count))
+                min_count = np.insert(np.expand_dims(min_count, axis=1), 1, a, axis=1)
+                min_count = min_count[min_count[:, 0].argsort()]
+                min_count = min_count[::-1]
+                # print(min_count)
+
+                sorted_minority = min_count[:, 1].astype("int")
+                # print(sorted_minority)
+
+                n_instances = int((self.balance_ratio - ratio)*len(y))
+
+                if n_instances > len(sorted_minority):
+                    new_minority = self.minority_data[sorted_minority]
+                else:
+                    new_minority = self.minority_data[sorted_minority[0:n_instances]]
 
             res_X = np.concatenate((new_minority, majority), axis=0)
             res_y = np.concatenate((np.full(len(new_minority), self.minority_name), np.full(len(majority), self.majority_name)), axis=0)

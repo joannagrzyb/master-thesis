@@ -1,4 +1,4 @@
-from sklearn.svm import SVC
+from sklearn.base import BaseEstimator
 from sklearn.neighbors import KNeighborsClassifier
 from sklearn import metrics
 from sklearn.preprocessing import LabelEncoder
@@ -9,7 +9,8 @@ import math
 import warnings
 from sklearn.base import clone
 
-class LearnppCDS:
+
+class LearnppCDS(BaseEstimator):
 
     """
     References
@@ -19,7 +20,12 @@ class LearnppCDS:
            on Knowledge and Data Engineering 25.10 (2013): 2283-2301.
     """
 
-    def __init__(self, base_classifier=KNeighborsClassifier(), number_of_classifiers=10, param_a=2, param_b=2):
+    def __init__(self,
+                 base_classifier=KNeighborsClassifier(),
+                 number_of_classifiers=10,
+                 param_a=2,
+                 param_b=2):
+
         self.base_classifier = base_classifier
         self.number_of_classifiers = number_of_classifiers
         self.classifier_array = []
@@ -56,7 +62,7 @@ class LearnppCDS:
 
             E = (1 - metrics.accuracy_score(y, y_pred))
 
-            eq = np.equal(y,y_pred)
+            eq = np.equal(y, y_pred)
 
             w = np.zeros(eq.shape)
             w[eq == True] = E/float(self.number_of_instances)
@@ -71,28 +77,25 @@ class LearnppCDS:
             new_classifier = clone(self.base_classifier).fit(res_X, res_y)
             self.classifier_array.append(new_classifier)
 
-            epsilon = []
             beta = []
             epsilon_sum_array = []
 
             for j in range(len(self.classifier_array)):
                 y_pred = self.classifier_array[j].predict(X)
 
-                eq_2 = np.not_equal(y,y_pred).astype(int)
+                eq_2 = np.not_equal(y, y_pred).astype(int)
 
                 epsilon_sum = np.sum(eq_2*D)
                 epsilon_sum_array.append(epsilon_sum)
 
                 if epsilon_sum > 0.5:
                     if j is len(self.classifier_array) - 1:
-                        self.classifier_array[j] = self.base_classifier.fit(res_X, res_y)
+                        self.classifier_array[j] = clone(self.base_classifier).fit(res_X, res_y)
                     else:
                         epsilon_sum = 0.5
 
             epsilon_sum_array = np.array(epsilon_sum_array)
             beta = epsilon_sum_array / (1 - epsilon_sum_array)
-
-            index = np.argmax(epsilon_sum_array)
 
             sigma = []
             a = self.param_a
@@ -112,7 +115,6 @@ class LearnppCDS:
                 beta_sum = np.sum(sigma_mean[0:t-k]*beta[0:t-k])
                 beta_mean.append(beta_sum)
 
-
             self.classifier_weights = []
             for b in beta_mean:
                 self.classifier_weights.append(math.log(1/b))
@@ -125,7 +127,7 @@ class LearnppCDS:
         else:
             res_X, res_y = self._resample(X, y)
 
-            new_classifier = self.base_classifier.fit(res_X, res_y)
+            new_classifier = clone(self.base_classifier).fit(res_X, res_y)
             self.classifier_array.append(new_classifier)
             self.classifier_weights = [1]
 
@@ -133,7 +135,9 @@ class LearnppCDS:
         X = np.array(X)
         y = np.array(y)
 
-        minioty, majority = minority_majority_split(X, y, self.minority_name, self.majority_name)
+        minioty, majority = minority_majority_split(X, y,
+                                                    self.minority_name,
+                                                    self.majority_name)
         if len(minioty) > 6:
             res_X, res_y = SMOTE().fit_sample(X, y)
         else:

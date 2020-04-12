@@ -1,15 +1,15 @@
-from sklearn.svm import SVC
+from sklearn.base import BaseEstimator
 from sklearn.neighbors import KNeighborsClassifier
 from sklearn.preprocessing import LabelEncoder
 import numpy as np
-import pandas as pd
-import math
+
 import warnings
 import random
 from utils import minority_majority_split, minority_majority_name
 from sklearn.base import clone
 
-class OUSE:
+
+class OUSE(BaseEstimator):
 
     """
     References
@@ -29,12 +29,12 @@ class OUSE:
         self.majority_name = None
         self.classes = None
         self.minority_data = []
-        self.ratio_chunks = []
+        self.chunk_time_stamp = []
+        self.chunk_sample_proba = []
         self.label_encoder = None
-        self.iterator = 0
+        self.time_stamp = 1
 
     def partial_fit(self, X, y, classes=None):
-        warnings.filterwarnings(action='ignore', category=DeprecationWarning)
         if classes is None and self.classes is None:
             self.label_encoder = LabelEncoder()
             self.label_encoder.fit(y)
@@ -60,7 +60,6 @@ class OUSE:
         minority, majority = minority_majority_split(X, y, self.minority_name, self.majority_name)
 
         if not majority.any():
-            print("majoirty empty")
             return
 
         majority_split = np.array_split(majority, self.number_of_classifiers)
@@ -72,6 +71,8 @@ class OUSE:
             new_classifier = clone(self.base_classifier).fit(res_X, res_y)
             self.classifier_array.append(new_classifier)
 
+        self.time_stamp += 1
+
     def _resample(self, X, y):
         y = np.array(y)
         X = np.array(X)
@@ -79,21 +80,26 @@ class OUSE:
         minority, majority = minority_majority_split(X, y, self.minority_name, self.majority_name)
 
         self.minority_data.append(minority.tolist())
-        self.ratio_chunks.append(len(minority)/float(len(majority)))
-        self.iterator += 1
+        self.chunk_time_stamp.append(self.time_stamp)
 
         if len(self.minority_data) > self.number_of_chunks:
             del self.minority_data[0]
-            del self.ratio_chunks[0]
+            del self.chunk_time_stamp[0]
+
+        self.chunk_sample_proba = np.arange(len(self.minority_data))+1
+        self.chunk_sample_proba = self.chunk_sample_proba / self.chunk_sample_proba.sum()
 
         number_of_instances = len(majority)/self.number_of_classifiers
 
+        chunk_indexes = np.random.choice(len(self.chunk_sample_proba), int(number_of_instances), p=self.chunk_sample_proba)
+        cia, cca = np.unique(chunk_indexes, return_counts=True)
+
         new_minority = []
-        for md in self.minority_data:
-            if number_of_instances < len(md):
-                new_minority.extend(random.sample(md, int(number_of_instances)))
+        for chunk_index, chunk_count in zip(cia, cca):
+            if len(self.minority_data[chunk_index]) > chunk_count:
+                new_minority.extend(random.sample(self.minority_data[chunk_index], chunk_count))
             else:
-                new_minority.extend(md)
+                new_minority.extend(self.minority_data[chunk_index])
 
         return new_minority
 

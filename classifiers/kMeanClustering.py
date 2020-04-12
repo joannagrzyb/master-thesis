@@ -1,4 +1,4 @@
-from sklearn.svm import SVC
+from sklearn.base import BaseEstimator
 from sklearn.neighbors import KNeighborsClassifier
 from sklearn.preprocessing import LabelEncoder
 from sklearn.cluster import KMeans
@@ -8,7 +8,8 @@ from utils import minority_majority_split, minority_majority_name
 import warnings
 from sklearn.base import clone
 
-class KMeanClustering:
+
+class KMeanClustering(BaseEstimator):
 
     """
     References
@@ -19,7 +20,10 @@ class KMeanClustering:
            Intelligence. Springer, Berlin, Heidelberg, 2009. 65-71.
     """
 
-    def __init__(self, base_classifier=KNeighborsClassifier(), number_of_classifiers=10):
+    def __init__(self,
+                 base_classifier=KNeighborsClassifier(),
+                 number_of_classifiers=10):
+
         self.base_classifier = base_classifier
         self.number_of_classifiers = number_of_classifiers
         self.classifier_array = []
@@ -62,22 +66,20 @@ class KMeanClustering:
             self.classifier_weights.append(1)
         else:
             auc_array = []
+
             for i in range(len(self.classifier_array)):
                 y_score = self.classifier_array[i].predict_proba(res_X)
-                fpr, tpr, thresholds = metrics.roc_curve(res_y, y_score[:,0])
-                auc_array += [metrics.auc(fpr, tpr)]
+                auc_array.append(metrics.roc_auc_score(res_y, y_score[:, 1]))
 
             j = np.argmin(auc_array)
 
             y_score = new_classifier.predict_proba(res_X)
-            fpr, tpr, thresholds = metrics.roc_curve(res_y, y_score[:,0])
-            new_auc = metrics.auc(fpr, tpr)
+            new_auc = metrics.roc_auc_score(res_y, y_score[:, 1])
 
             if new_auc > auc_array[j]:
                 self.classifier_array[j] = new_classifier
                 auc_array[j] = new_auc
 
-            # auc_norm = auc_array / np.linalg.norm(auc_array)
             for i in range(len(self.classifier_array)):
                 self.classifier_weights[i] = auc_array[i]
 
@@ -85,7 +87,9 @@ class KMeanClustering:
         y = np.array(y)
         X = np.array(X)
 
-        minority, majority = minority_majority_split(X, y, self.minority_name, self.majority_name)
+        minority, majority = minority_majority_split(X, y,
+                                                     self.minority_name,
+                                                     self.majority_name)
 
         # Undersample majority array
         if len(minority) != 0:

@@ -4,6 +4,8 @@ from . import ploting
 from . import significant
 from . import streamTools
 from .imbalancedStreams import minority_majority_name, minority_majority_split
+from . import DriftEvaluator
+from . import TestThenTrainEvaluator
 
 __all__ = [
     'minority_majority_name',
@@ -14,4 +16,6 @@ __all__ = [
     # 'ranking',
     'significant',
     'streamTools'
+    'DriftEvaluator',
+    'TestThenTrainEvaluator',
 ]

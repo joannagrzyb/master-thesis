@@ -1,4 +1,4 @@
-from sklearn.svm import SVC
+from sklearn.base import BaseEstimator
 from sklearn.neighbors import KNeighborsClassifier
 from sklearn import metrics
 from sklearn.preprocessing import LabelEncoder
@@ -9,7 +9,8 @@ import math
 import warnings
 from sklearn.base import clone
 
-class LearnppNIE:
+
+class LearnppNIE(BaseEstimator):
 
     """
     References
@@ -19,7 +20,12 @@ class LearnppNIE:
            on Knowledge and Data Engineering 25.10 (2013): 2283-2301.
     """
 
-    def __init__(self, base_classifier=KNeighborsClassifier(), number_of_classifiers=5, param_a=1, param_b=1):
+    def __init__(self,
+                 base_classifier=KNeighborsClassifier(),
+                 number_of_classifiers=5,
+                 param_a=1,
+                 param_b=1):
+
         self.base_classifier = base_classifier
         self.number_of_classifiers = number_of_classifiers
         self.classifier_array = []
@@ -114,7 +120,9 @@ class LearnppNIE:
         y = np.array(y)
         X = np.array(X)
 
-        minority, majority = minority_majority_split(X, y, self.minority_name, self.majority_name)
+        minority, majority = minority_majority_split(X, y,
+                                                     self.minority_name,
+                                                     self.majority_name)
 
         T = self.number_of_classifiers
         N = len(X)
@@ -135,5 +143,7 @@ class LearnppNIE:
 
     def _sub_ensemble_predict(self, i, X):
         predictions = np.asarray([clf.predict(X) for clf in self.sub_ensemble_array[i]]).T
-        maj = np.apply_along_axis(lambda x: np.argmax(np.bincount(x)), axis=1, arr=predictions)
+        maj = np.apply_along_axis(lambda x: np.argmax(np.bincount(x)),
+                                  axis=1,
+                                  arr=predictions)
         return maj

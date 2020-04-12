@@ -1,4 +1,5 @@
 import numpy as np
+import plotly
 import chart_studio.plotly
 import plotly.figure_factory as ff
 import pandas as pd

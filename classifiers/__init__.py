@@ -3,6 +3,11 @@ from .ouse import OUSE
 from .kMeanClustering import KMeanClustering
 from .learnppCDS import LearnppCDS
 from .learnppNIE import LearnppNIE
+from .OBhdig import OnlineBaggingHDIG
+from .dse import DeterministicSamplingEnsemble
+from .AWEhdig import AWEhdig
+from .SEAhdig import SEAhdig
+from .HDWE import HDWE
 
 __all__ = [
     'REA',
@@ -10,4 +15,9 @@ __all__ = [
     'kMeanClustering',
     'learnppCDS',
     'learnppNIE',
+    'OnlineBaggingHDIG',
+    'DeterministicSamplingEnsemble',
+    'AWEhdig',
+    'SEAhdig',
+    'HDWE',
 ]
