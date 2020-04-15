@@ -1,13 +1,16 @@
 from strlearn.evaluators.TestThenTrain import *
 from skmultiflow.drift_detection import DDM
-from sklearn.metrics import accuracy_score, auc, f1_score
+from sklearn.metrics import accuracy_score, auc, f1_score, balanced_accuracy_score
+from tqdm import tqdm
+import numpy as np
 
 class TestThenTrainEvaluator(TestThenTrain):
 
-    def __init__(self, metrics=[accuracy_score]):
+    def __init__(self, metrics=[accuracy_score], verbose=False):
         super(TestThenTrainEvaluator, self).__init__(metrics=metrics)
         self._ddm = DDM(min_num_instances=10, warning_level=1.0, out_control_level=1.5)
         self.drift_indices = []
+        self.verbose = verbose
 
     def process(self, stream, clfs):
         """
@@ -34,8 +37,13 @@ class TestThenTrainEvaluator(TestThenTrain):
             (len(self.clfs_), ((self.stream_.n_chunks - 1)), len(self.metrics))
         )
 
+        if self.verbose:
+            pbar = tqdm(total=stream.n_chunks)
+            
         while True:
             X, y = stream.get_chunk()
+            if self.verbose:
+                pbar.update(1)
 
             # Test
             if stream.previous_chunk is not None:

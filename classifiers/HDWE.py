@@ -5,7 +5,6 @@ from sklearn.model_selection import KFold
 import numpy as np
 from math import sqrt
 import strlearn as sl
-import statistics 
 
 class HDWE(ClassifierMixin, BaseEnsemble):
     
@@ -16,11 +15,12 @@ class HDWE(ClassifierMixin, BaseEnsemble):
     .. [2] Cieslak, David A., et al. "Hellinger distance decision trees are robust and skew-insensitive." Data Mining and Knowledge Discovery 24.1 (2012): 136-158.
     """
     
-    def __init__(self, base_estimator=None, n_estimators=10, n_splits=5):
+    def __init__(self, base_estimator=None, n_estimators=10, n_splits=5, pred_type="soft"):
         """Initialization."""
         self.base_estimator = base_estimator
         self.n_estimators = n_estimators
         self.n_splits = n_splits
+        self.pred_type = pred_type
         self.candidate_scores = []
         self.weights_ = []
         self.hd_weights = []
@@ -58,41 +58,10 @@ class HDWE(ClassifierMixin, BaseEnsemble):
             scores[fold] = self.hellinger_distance(fold_candidate, self.X_[test], self.y_[test])
         
         # Save scores
-        candidate_score = np.mean(scores)
-        self.candidate_scores.append(candidate_score)
-        # Normalize scores
-        if len(self.candidate_scores) > 0:
-            # !!! normalizacja z użyciem std i mean, ale chyba źle
-            # std = statistics.stdev(self.candidate_scores)
-            # mean = statistics.mean(self.candidate_scores)
-            # candidate_weight = (candidate_score-mean)/std
-            
-            # !!! normalizacja z wartoscia min i max, co daje zakres (0, 1), ale włącznie z 0 i 1 - co trochę psuje wykres
-            # normalized = [(candidate_s-min(self.candidate_scores))/(max(self.candidate_scores)-min(self.candidate_scores)) for candidate_s in self.candidate_scores]
-            # candidate_weight = normalized[-1]
-            
-            # !!! normalizacja, w której wartości sumują się do "1"
-            if sum(self.candidate_scores) == 0:
-                normalized = [0]
-            else:
-                normalized = [float(candidate_s)/sum(self.candidate_scores) for candidate_s in self.candidate_scores]
-            candidate_weight = normalized[-1]
-        else:
-            candidate_weight = 0
+        candidate_weight = np.mean(scores)
         
         # Calculate weights of current ensemble
-        self.hd_weights = [self.hellinger_distance(clf, self.X_, self.y_) for clf in self.ensemble_]
-        # Normalize weights
-        if len(self.hd_weights) > 0:
-            # !!! normalizacja, w której mamy wartości od 0 do 1 (włącznie)
-            # normalized_weights = [(hd_w-min(self.hd_weights))/(max(self.hd_weights)-min(self.hd_weights)) for hd_w in self.hd_weights] 
-            
-            # !!! normalizacja, w której wartości sumują się do "1"
-            if sum(self.hd_weights) == 0:
-                normalized_weights = [0]
-            else:
-                normalized_weights = [float(hd_w)/sum(self.hd_weights) for hd_w in self.hd_weights]  
-            self.weights_ = normalized_weights
+        self.weights_ = [self.hellinger_distance(clf, self.X_, self.y_) for clf in self.ensemble_]
 
         # Add new model
         self.ensemble_.append(candidate)
@@ -103,7 +72,15 @@ class HDWE(ClassifierMixin, BaseEnsemble):
             worst_idx = np.argmin(self.weights_)
             del self.ensemble_[worst_idx]
             del self.weights_[worst_idx]
-
+            
+        # Normalization of weights
+        if sum(self.weights_) != 0:
+            normalized_weights = [float(w)/sum(self.weights_) for w in self.weights_]  
+            self.weights_ = normalized_weights
+        else:
+            mean_ = 1/len(self.weights_)
+            self.weights_ = [mean_ for i in self.weights_]
+            
         return self
 
     # Calculate Hellinger distance based on ref. [2] 
@@ -126,38 +103,44 @@ class HDWE(ClassifierMixin, BaseEnsemble):
     def ensemble_support_matrix(self, X):
         """Ensemble support matrix."""
         return np.array([member_clf.predict_proba(X) for member_clf in self.ensemble_])
+    
+    def predict(self, X):
+        if self.pred_type == "soft":
+            return self.predict_soft(X)
+        elif self.pred_type == "hard":
+            return self.predict_hard(X)
 
     # Prediction without calculated weights
-    # def predict(self, X):
-    #     """
-    #     Predict classes for X.
+    def predict_hard(self, X):
+        """
+        Predict classes for X.
 
-    #     Parameters
-    #     ----------
-    #     X : array-like, shape (n_samples, n_features)
-    #         The training input samples.
+        Parameters
+        ----------
+        X : array-like, shape (n_samples, n_features)
+            The training input samples.
 
-    #     Returns
-    #     -------
-    #     y : array-like, shape (n_samples, )
-    #         The predicted classes.
-    #     """
+        Returns
+        -------
+        y : array-like, shape (n_samples, )
+            The predicted classes.
+        """
 
-    #     # Check is fit had been called
-    #     check_is_fitted(self, "classes_")
-    #     X = check_array(X)
-    #     if X.shape[1] != self.X_.shape[1]:
-    #         raise ValueError("number of features does not match")
+        # Check is fit had been called
+        check_is_fitted(self, "classes_")
+        X = check_array(X)
+        if X.shape[1] != self.X_.shape[1]:
+            raise ValueError("number of features does not match")
 
-    #     esm = self.ensemble_support_matrix(X)
-    #     average_support = np.mean(esm, axis=0)
-    #     prediction = np.argmax(average_support, axis=1)
+        esm = self.ensemble_support_matrix(X)
+        average_support = np.mean(esm, axis=0)
+        prediction = np.argmax(average_support, axis=1)
 
-    #     # Return prediction
-    #     return self.classes_[prediction]
+        # Return prediction
+        return self.classes_[prediction]
 
     # Prediction (making decision) use Hellinger distance weights 
-    def predict(self, X):
+    def predict_soft(self, X):
         """
         Predict classes for X.
     

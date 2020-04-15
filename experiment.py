@@ -13,7 +13,7 @@ from utils.TestThenTrainEvaluator import TestThenTrainEvaluator
 
 # List of classifiers from sklearn and others, but partial_fit() function is mandatory
 clfs = [
-    MLPClassifier(),
+    # MLPClassifier(),
     # sl.ensembles.OOB(GaussianNB()),
     # sl.ensembles.UOB(GaussianNB()),
     # sl.ensembles.OnlineBagging(GaussianNB()),
@@ -24,7 +24,7 @@ clfs = [
 ]
 
 clf_names = [
-    "MLP",
+    # "MLP",
     # "OOB",
     # "UOB",
     # "OB",
@@ -42,14 +42,14 @@ concept_kwargs = {
     "n_classes": 2,
     "random_state": 157,
     "n_features": 20,
-    "n_drifts": 2,
+    "n_drifts": 1,
     # "incremental": True,   # incremental drift
     # "concept_sigmoid_spacing": 5,  # incremental drift
     "n_informative": 15,
     "n_redundant": 5,
     "n_repeated": 0,
     "weights": [0.1, 0.9],     # stationary imbalanced stream
-    # "weights": (1, 5, 0.9),    # dynamically imbalanced stream - !!! wtedy coś nie działa w prediction w funckji HDWE, i ze zwykłą predykcją, wykres trochę dziwny
+    # "weights": (2, 5, 0.9),    # dynamically imbalanced stream
 }
 
 stream = sl.streams.StreamGenerator(**concept_kwargs)
@@ -61,17 +61,17 @@ stream_name = "nonstationary"
 metrics = [sl.metrics.f1_score]
 
 # Initialize evaluator with given metrics
-evaluator = sl.evaluators.TestThenTrain(metrics)
+# evaluator = sl.evaluators.TestThenTrain(metrics)
 
 # This evaluator is need to DriftEvaluator
-# evaluator = TestThenTrainEvaluator()
+evaluator = TestThenTrainEvaluator()
 
 
 evaluator.process(stream, clfs)
 
-# !!! Scores from Drift eval. - wychodzą trochę gorsze wyniki, czemu, jak to jest to samo co w strlearn tylko kilka rzeczy dodanych?
-# drift_evaluator = DriftEvaluator(evaluator.scores, evaluator.drift_indices)
-# print("Final scores:\n", evaluator.scores)
+# !!! Scores from Drift eval. - wychodzą trochę gorsze wyniki niż z strlearn - ?
+drift_evaluator = DriftEvaluator(evaluator.scores, evaluator.drift_indices)
+print("Final scores:\n", evaluator.scores)
 # Metryki dryftu ?
 # max_performance_loss = drift_evaluator.get_max_performance_loss()
 # recovery_lengths = drift_evaluator.get_recovery_lengths()
@@ -79,12 +79,12 @@ evaluator.process(stream, clfs)
 # models_scores = evaluator.scores
 
 
-scores = evaluator.scores
-print(scores.shape)
+# scores = evaluator.scores
+# print(scores.shape)
 
 # Shape of the score: 1st - classfier, 2nd - chunk, 3rd - metric
 # Every matrix is different classifier, every row is test chunks and every column is different metric
-print(scores)
+# print(scores)
 
 # Plotting figures of chosen metrics
 fig, ax = plt.subplots(1, len(metrics), figsize=(24, 8))
