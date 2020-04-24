@@ -8,6 +8,7 @@ from .dse import DeterministicSamplingEnsemble
 from .AWEhdig import AWEhdig
 from .SEAhdig import SEAhdig
 from .HDWE import HDWE
+from .HDDT import HDDT
 
 __all__ = [
     'REA',
@@ -20,4 +21,5 @@ __all__ = [
     'AWEhdig',
     'SEAhdig',
     'HDWE',
+    'HDDT',
 ]
