@@ -5,41 +5,22 @@ from matplotlib.colors import LinearSegmentedColormap
 from sklearn.naive_bayes import GaussianNB
 from sklearn.neural_network import MLPClassifier
 from classifiers import HDWE
-from classifiers import HDDT
 from sklearn.tree import DecisionTreeClassifier
-from utils.DriftEvaluator import DriftEvaluator
-from utils.TestThenTrainEvaluator import TestThenTrainEvaluator
 
 
 # List of classifiers from sklearn and others, but partial_fit() function is mandatory
 clfs = [
-    # MLPClassifier(hidden_layer_sizes=(10)),
-    # sl.ensembles.OOB(GaussianNB()),
-    # sl.ensembles.UOB(GaussianNB()),
-    # sl.ensembles.OnlineBagging(GaussianNB()),
     sl.ensembles.AWE(GaussianNB()),
-    # sl.ensembles.AWE(DecisionTreeClassifier()),
     HDWE(GaussianNB()),
-    # HDWE(DecisionTreeClassifier()),
-    # HDDT(),
-    # HDWE(HDDT()),
 ]
 
 clf_names = [
-    # "MLP",
-    # "OOB",
-    # "UOB",
-    # "OB",
     "AWE",
-    # "AWEdt",
     "HDWE",
-    # "HDWEdt",
-    # "HDDT",
-    # "HDWE-HDDT",
 ]
 
 # Declaration of the data stream with given parameters
-n_chunks = 200
+n_chunks = 5
 concept_kwargs = {
     "n_chunks": n_chunks,
     "chunk_size": 500,
@@ -72,23 +53,6 @@ scores = evaluator.scores
 # Every matrix is different classifier, every row is test chunks and every column is different metric
 print(scores.shape)
 
-# This evaluator is need to DriftEvaluator
-# evaluator = TestThenTrainEvaluator()
-# evaluator.process(stream, clfs)
-# drift_evaluator = DriftEvaluator(evaluator.scores, evaluator.drift_indices)
-# # print("Final scores:\n", evaluator.scores)
-# # Metryki dryftu
-# max_performance_loss = drift_evaluator.get_max_performance_loss()
-# recovery_lengths = drift_evaluator.get_recovery_lengths()
-# accuracy = drift_evaluator.get_mean_acc()
-# # models_scores = evaluator.scores
-
-# print(max_performance_loss)
-# print(recovery_lengths)
-
-
-
-
 # print(scores)
 
 # Plotting figures of chosen metrics
@@ -113,4 +77,4 @@ plt.ylabel("Quality")
 plt.xlabel("Chunk")
 ax.legend()
 # plt.show()
-fig.savefig("results/plots/test_result.png")
+# fig.savefig("results/plots/test_result.png")
