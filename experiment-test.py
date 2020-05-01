@@ -4,19 +4,26 @@ import matplotlib.pyplot as plt
 from matplotlib.colors import LinearSegmentedColormap
 from sklearn.naive_bayes import GaussianNB
 from sklearn.neural_network import MLPClassifier
-from classifiers import HDWE
 from sklearn.tree import DecisionTreeClassifier
+from classifiers import HDWE
+from classifiers import HDDT
 
 
 # List of classifiers from sklearn and others, but partial_fit() function is mandatory
 clfs = [
     sl.ensembles.AWE(GaussianNB()),
-    HDWE(GaussianNB()),
+    # sl.ensembles.AWE(HDDT()),
+    HDWE(GaussianNB(), pred_type="hard"),
+    HDDT(),
+    HDWE(HDDT(), pred_type="hard"),
 ]
 
 clf_names = [
     "AWE",
+    # "AWE-HD"
     "HDWE",
+    "HDDT",
+    "HDWE-HD"
 ]
 
 # Declaration of the data stream with given parameters
@@ -52,7 +59,6 @@ scores = evaluator.scores
 # Shape of the score: 1st - classfier, 2nd - chunk, 3rd - metric
 # Every matrix is different classifier, every row is test chunks and every column is different metric
 print(scores.shape)
-
 # print(scores)
 
 # Plotting figures of chosen metrics
