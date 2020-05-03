@@ -17,8 +17,8 @@ class HDDT(BaseEstimator, ClassifierMixin):
             https://github.com/kaurao/HDDT
     """
     
-    def __init__(self, C=40):
-        # !!! C should be integer from 5 to 40?
+    def __init__(self, C=2):
+        # TODO: grid search - for the best C
         self.C = C
     
     def fit(self, X, y):
@@ -26,8 +26,7 @@ class HDDT(BaseEstimator, ClassifierMixin):
         self.partial_fit(X, y)
         return self
     
-    def partial_fit(self, X, y, classes=None):
-        
+    def partial_fit(self, X, y, classes=None):        
         # Check classes
         self.classes_ = classes
         if self.classes_ is None:
@@ -48,7 +47,6 @@ class HDDT(BaseEstimator, ClassifierMixin):
         
         return self
         
-    # predict returns classes, for example 0 or 1
     def predict(self, X):
         n_row = X.shape[0]
         y = np.full(n_row, -1)
@@ -67,15 +65,32 @@ class HDDT(BaseEstimator, ClassifierMixin):
                         node = node["childLeft"]
                     else: 
                         node = node["childRight"]
-                
             y[i] = node["label"]
-        # Return prediction
+        # Return prediction classes, for example 0 or 1
         return y
     
-        
-    # predict_proba returns probabilities of occurrence class 0 or 1, for example 0,238 and 0,762
     def predict_proba(self, X):
-        pass  
+        n_row = X.shape[0]
+        probas = np.full((n_row,2), -1)
+        for i in range(n_row):
+            # search the tree until we find a leaf node
+            node = self.root
+            while isinstance(node.get("v"), (int, float)):
+                if node["type"] == "discrete":
+                    if X[i,node["i"]] == node["v"]: 
+                        node = node["childLeft"]
+                    else: 
+                        node = node["childRight"]
+                
+                elif node["type"] == "continuous": 
+                    if X[i,node["i"]] <= node["v"]: 
+                        node = node["childLeft"]
+                    else: 
+                        node = node["childRight"]
+            probas[i][0] = node["proba"][0]
+            probas[i][1] = node["proba"][1]
+        # Return prediction probabilities of occurrence class 0 or 1, for example 0,238 and 0,762
+        return probas
 
     def HDDT_func(self, X, y, C):
         """
@@ -103,12 +118,16 @@ class HDDT(BaseEstimator, ClassifierMixin):
         node["C"] = C
         node["labels"] = self.labels
         
-        # If there is only one class
+        # If there is only one class, this is leaf
         if len(np.unique(y)) == 1:
             node["label"] = y[0]
+            if y[0] == 0:
+                node["proba"] = [1, 0]
+            else:
+                node["proba"] = [0, 1]
             return node
         
-        # If y is smaller than minimum size of the training set
+        # If y is smaller than minimum size of the training set, this is leaf
         elif len(y) < C:
             # Count number of samples of every class     
             classes, counts = np.unique(y, return_counts=True)
@@ -116,6 +135,13 @@ class HDDT(BaseEstimator, ClassifierMixin):
             # Use Laplace smoothing, by adding 1 to count of each class
             counts[0] += 1
             counts[1] += 1
+            
+            # Count probabilities of every class
+            p = counts[0] / len(y)
+            if classes[0] == 0:
+                node["proba"] = [p, 1-p]
+            else:
+                node["proba"] = [1-p, p]
         
             # Return label of that class(0 or 1), where there is more samples 
             if counts[0] > counts[1]:
@@ -124,6 +150,7 @@ class HDDT(BaseEstimator, ClassifierMixin):
                 node["label"] = classes[1]
             return node
         
+        # this is node
         else:
             # HD is 2D-array, it contains Hellinger Distance, value (place of split) and type (discrete or continuous)
             HD = []

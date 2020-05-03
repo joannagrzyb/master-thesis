@@ -11,23 +11,25 @@ from classifiers import HDDT
 
 # List of classifiers from sklearn and others, but partial_fit() function is mandatory
 clfs = [
-    sl.ensembles.AWE(GaussianNB()),
+    # sl.ensembles.AWE(GaussianNB()),
     # sl.ensembles.AWE(HDDT()),
     HDWE(GaussianNB(), pred_type="hard"),
     HDDT(),
     HDWE(HDDT(), pred_type="hard"),
+    HDWE(DecisionTreeClassifier(), pred_type="hard")
 ]
 
 clf_names = [
-    "AWE",
+    # "AWE",
     # "AWE-HD"
-    "HDWE",
+    "HDWE-GNB",
     "HDDT",
-    "HDWE-HD"
+    "HDWE-HDDT",
+    "HDWE-CART",
 ]
 
 # Declaration of the data stream with given parameters
-n_chunks = 5
+n_chunks = 50
 concept_kwargs = {
     "n_chunks": n_chunks,
     "chunk_size": 500,

@@ -20,6 +20,7 @@ Master thesis implementation
 ### Methods
 
 1. HDWE (Hellinger Distance Weighted Ensemble) - own contribution
+2. HDDT (Hellinger Distance Decision Tree) - own implementation 
 2. AWE (Accuracy-Weighted Ensemble)
 3. Gaussian Naive Bayes - base classifier
 
