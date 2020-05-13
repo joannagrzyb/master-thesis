@@ -18,8 +18,8 @@ clf_names = [
 
 # Declaration of the data stream with given parameters
 n_streams = 10
-random_states = list(range(1000, 1000+n_streams*55, 55))
-# random_states = [123, 345] # testing
+# random_states = list(range(1000, 1000+n_streams*55, 55))
+random_states = [1231, 1345, 1789] # testing
 st_stream_weights = [[0.1, 0.9], [0.2, 0.8], [0.3, 0.7], [0.4, 0.6], [0.5, 0.5]]
 d_stream_weights = [(2, 5, 0.9), (2, 5, 0.8), (2, 5, 0.7), (2, 5, 0.6)]
 concept_kwargs = {

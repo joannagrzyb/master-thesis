@@ -14,8 +14,8 @@ clfs = [
     # sl.ensembles.AWE(GaussianNB()),
     # sl.ensembles.AWE(HDDT()),
     HDWE(GaussianNB(), pred_type="hard"),
-    HDDT(),
-    HDWE(HDDT(), pred_type="hard"),
+    # HDDT(),
+    # HDWE(HDDT(), pred_type="hard"),
     HDWE(DecisionTreeClassifier(), pred_type="hard")
 ]
 
@@ -23,13 +23,13 @@ clf_names = [
     # "AWE",
     # "AWE-HD"
     "HDWE-GNB",
-    "HDDT",
-    "HDWE-HDDT",
+    # "HDDT",
+    # "HDWE-HDDT",
     "HDWE-CART",
 ]
 
 # Declaration of the data stream with given parameters
-n_chunks = 50
+n_chunks = 3
 concept_kwargs = {
     "n_chunks": n_chunks,
     "chunk_size": 500,
@@ -53,7 +53,6 @@ stream_name = "nonstationary"
 # metrics = [sl.metrics.balanced_accuracy_score, sl.metrics.f1_score]
 # metrics = [sl.metrics.balanced_accuracy_score]
 metrics = [sl.metrics.f1_score]
-
 # Initialize evaluator with given metrics - stream learn evaluator
 evaluator = sl.evaluators.TestThenTrain(metrics)
 evaluator.process(stream, clfs)
