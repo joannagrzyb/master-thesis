@@ -11,22 +11,25 @@ from sklearn.neighbors import KNeighborsClassifier
 from sklearn.svm import SVC
 from classifiers import HDWE
 
+warnings.filterwarnings("ignore")
 
 clfs = [
     HDWE(GaussianNB(), pred_type="hard"),
-    # HDWE(MLPClassifier(hidden_layer_sizes=(10)), pred_type="hard"),
-    # HDWE(DecisionTreeClassifier(), pred_type="hard"),
-    # HDWE(HDDT(), pred_type="hard"),
-    # HDWE(KNeighborsClassifier(), pred_type="hard"),
+    HDWE(MLPClassifier(hidden_layer_sizes=(10)), pred_type="hard"),
+    HDWE(DecisionTreeClassifier(random_state=20), pred_type="hard"),
+    HDWE(HDDT(), pred_type="hard"),
+    HDWE(KNeighborsClassifier(), pred_type="hard"),
     # HDWE(SVC(probability=True), pred_type="hard"),
+    # sl.ensembles.SEA(GaussianNB()) 
 ]
 clf_names = [
-    "HDWE-GNB", # DONE od 15%, od 1 do 10 błędy
-    # "HDWE-MLP",
-    # "HDWE-CART",
-    # "HDWE-HDDT",
-    # "HDWE-KNN", # DONE od 15%, ale błędy RuntimeWarning
-    # "HDWE-SVC",
+    "HDWE-GNB", # DONE
+    "HDWE-MLP", # DONE
+    "HDWE-CART", # DONE
+    "HDWE-HDDT",
+    "HDWE-KNN", # DONE
+    # "HDWE-SVC", # DONE od 3% i 1% stat, dla 1% problem z 1 klasą
+    # "SEA" # Only for test strlearn
 ]
 
 # Declaration of the data stream with given parameters
@@ -37,18 +40,18 @@ st_stream_weights = [
     [0.03, 0.97], 
     [0.05, 0.95], 
     [0.1, 0.9], 
-    # [0.15, 0.85], 
-    # [0.2, 0.8], 
-    # [0.25, 0.75]
+    [0.15, 0.85], 
+    [0.2, 0.8], 
+    [0.25, 0.75]
 ]
 d_stream_weights = [
     (2, 5, 0.99), 
     (2, 5, 0.97), 
     (2, 5, 0.95), 
     (2, 5, 0.9), 
-    # (2, 5, 0.85), 
-    # (2, 5, 0.8), 
-    # (2, 5, 0.75)
+    (2, 5, 0.85), 
+    (2, 5, 0.8), 
+    (2, 5, 0.75)
 ]
 concept_kwargs = {
     "n_chunks": 200, # 200
@@ -106,9 +109,9 @@ for drift in drifts:
             for i_metric, metric_name in enumerate(metric_names):
                 for j_clf, clf_name in enumerate(clf_names):
                     metric_score = scores[j_clf, :, i_metric]
-                    filename = "results/metrics/gen/%s/%s/%s/%s.csv" % (drift, stream_name, metric_name, clf_name)
-                    if not os.path.exists("results/metrics/gen/%s/%s/%s/" % (drift, stream_name, metric_name)):
-                        os.makedirs("results/metrics/gen/%s/%s/%s/" % (drift, stream_name, metric_name))
+                    filename = "results/experiment2/metrics/gen/%s/%s/%s/%s.csv" % (drift, stream_name, metric_name, clf_name)
+                    if not os.path.exists("results/experiment2/metrics/gen/%s/%s/%s/" % (drift, stream_name, metric_name)):
+                        os.makedirs("results/experiment2/metrics/gen/%s/%s/%s/" % (drift, stream_name, metric_name))
                     np.savetxt(fname=filename, fmt="%f", X=metric_score)
                     
                     print("DONE: %s, %s, %s, %s" % (drift, stream_name, metric_name, clf_name))
@@ -131,9 +134,9 @@ for drift in drifts:
             for i_metric, metric_name in enumerate(metric_names):
                 for j_clf, clf_name in enumerate(clf_names):
                     metric_score = scores[j_clf, :, i_metric]
-                    filename = "results/metrics/gen/%s/%s/%s/%s.csv" % (drift, stream_name, metric_name, clf_name)
-                    if not os.path.exists("results/metrics/gen/%s/%s/%s/" % (drift, stream_name, metric_name)):
-                        os.makedirs("results/metrics/gen/%s/%s/%s/" % (drift, stream_name, metric_name))
+                    filename = "results/experiment2/metrics/gen/%s/%s/%s/%s.csv" % (drift, stream_name, metric_name, clf_name)
+                    if not os.path.exists("results/experiment2/metrics/gen/%s/%s/%s/" % (drift, stream_name, metric_name)):
+                        os.makedirs("results/experiment2/metrics/gen/%s/%s/%s/" % (drift, stream_name, metric_name))
                     np.savetxt(fname=filename, fmt="%f", X=metric_score)
                     
                     print("DONE: %s, %s, %s, %s" % (drift, stream_name, metric_name, clf_name))

@@ -50,7 +50,7 @@ for drift in drifts:
             for metric_name in metric_names:
                 for clf_name in clf_names:
                     # Load data from file
-                    filename = "results/metrics/gen/%s/%s/%s/%s.csv" % (drift, s_name, metric_name, clf_name)
+                    filename = "results/experiment1/metrics/gen/%s/%s/%s/%s.csv" % (drift, s_name, metric_name, clf_name)
                     plot_data = np.genfromtxt(filename, delimiter=',', dtype=np.float32)
                     
                     if sigma > 0:
@@ -59,11 +59,11 @@ for drift in drifts:
                     plt.plot(range(len(plot_data)), plot_data, label=clf_name)
                     
                 plot_name = "p_gen_%s_s_ir%s_%s_rs%s" % (drift, weights, metric_name, random_state)
-                plotfilename_png = "results/plots/gen/%s/%s/%s.png" % (drift, metric_name, plot_name)
-                plotfilename_eps = "results/plots/gen/%s/%s/%s.eps" % (drift, metric_name, plot_name)
+                plotfilename_png = "results/experiment1/plots/gen/%s/%s/%s.png" % (drift, metric_name, plot_name)
+                plotfilename_eps = "results/experiment1/plots/gen/%s/%s/%s.eps" % (drift, metric_name, plot_name)
                 
-                if not os.path.exists("results/plots/gen/%s/%s/" % (drift, metric_name)):
-                    os.makedirs("results/plots/gen/%s/%s/" % (drift, metric_name))
+                if not os.path.exists("results/experiment1/plots/gen/%s/%s/" % (drift, metric_name)):
+                    os.makedirs("results/experiment1/plots/gen/%s/%s/" % (drift, metric_name))
                     
                 plt.legend()
                 plt.ylabel(metric_name)
@@ -83,7 +83,7 @@ for drift in drifts:
             for metric_name in metric_names:
                 for clf_name in clf_names:
                     # Load data from file
-                    filename = "results/metrics/gen/%s/%s/%s/%s.csv" % (drift, s_name, metric_name, clf_name)
+                    filename = "results/experiment1/metrics/gen/%s/%s/%s/%s.csv" % (drift, s_name, metric_name, clf_name)
                     plot_data = np.genfromtxt(filename, delimiter=',', dtype=np.float32)
                     
                     if sigma > 0:
@@ -92,11 +92,11 @@ for drift in drifts:
                     plt.plot(range(len(plot_data)), plot_data, label=clf_name)
                     
                 plot_name = "p_gen_%s_d_ir%s_%s_rs%s" % (drift, weights, metric_name, random_state)
-                plotfilename_png = "results/plots/gen/%s/%s/%s.png" % (drift, metric_name, plot_name)
+                plotfilename_png = "results/experiment1/plots/gen/%s/%s/%s.png" % (drift, metric_name, plot_name)
                 plotfilename_eps = "results/plots/gen/%s/%s/%s.eps" % (drift, metric_name, plot_name)
                 
-                if not os.path.exists("results/plots/gen/%s/%s/" % (drift, metric_name)):
-                    os.makedirs("results/plots/gen/%s/%s/" % (drift, metric_name))
+                if not os.path.exists("results/experiment1/plots/gen/%s/%s/" % (drift, metric_name)):
+                    os.makedirs("results/experiment1/plots/gen/%s/%s/" % (drift, metric_name))
                     
                 plt.legend()
                 plt.ylabel(metric_name)

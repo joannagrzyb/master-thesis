@@ -76,9 +76,9 @@ for drift in drifts:
             for i_metric, metric_name in enumerate(metric_names):
                 for j_clf, clf_name in enumerate(clf_names):
                     metric_score = scores[j_clf, :, i_metric]
-                    filename = "results/metrics/gen/%s/%s/%s/%s.csv" % (drift, stream_name, metric_name, clf_name)
-                    if not os.path.exists("results/metrics/gen/%s/%s/%s/" % (drift, stream_name, metric_name)):
-                        os.makedirs("results/metrics/gen/%s/%s/%s/" % (drift, stream_name, metric_name))
+                    filename = "results/experiment1/metrics/gen/%s/%s/%s/%s.csv" % (drift, stream_name, metric_name, clf_name)
+                    if not os.path.exists("results/experiment1/metrics/gen/%s/%s/%s/" % (drift, stream_name, metric_name)):
+                        os.makedirs("results/experiment1/metrics/gen/%s/%s/%s/" % (drift, stream_name, metric_name))
                     np.savetxt(fname=filename, fmt="%f", X=metric_score)
         
     # Loop for experiment for dynamically imbalanced streams
@@ -99,7 +99,7 @@ for drift in drifts:
             for i_metric, metric_name in enumerate(metric_names):
                 for j_clf, clf_name in enumerate(clf_names):
                     metric_score = scores[j_clf, :, i_metric]
-                    filename = "results/metrics/gen/%s/%s/%s/%s.csv" % (drift, stream_name, metric_name, clf_name)
+                    filename = "results/experiment1/metrics/gen/%s/%s/%s/%s.csv" % (drift, stream_name, metric_name, clf_name)
                     if not os.path.exists("results/metrics/gen/%s/%s/%s/" % (drift, stream_name, metric_name)):
-                        os.makedirs("results/metrics/gen/%s/%s/%s/" % (drift, stream_name, metric_name))
+                        os.makedirs("results/experiment1/metrics/gen/%s/%s/%s/" % (drift, stream_name, metric_name))
                     np.savetxt(fname=filename, fmt="%f", X=metric_score)
