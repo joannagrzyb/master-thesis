@@ -15,12 +15,14 @@ from classifiers import HDWE
 
 # TODO: wybierz potem 2 najlepsze klasyfikatory bazowe
 # TODO: dodaj (wybierz dobre) metody state of the art
+# TODO: przerób to jak ex_2 wielowątkowość
 
 clfs = [
     sl.ensembles.AWE(GaussianNB()),
     sl.ensembles.OnlineBagging(GaussianNB()),
     sl.ensembles.OOB(GaussianNB()),
     sl.ensembles.UOB(GaussianNB()),
+    HDDT(),
     
     # HDWE(GaussianNB(), pred_type="hard"),
     # HDWE(MLPClassifier(hidden_layer_sizes=(10)), pred_type="hard"),
@@ -34,6 +36,7 @@ clf_names = [
     "OB-GNB",
     "OOB-GNB",
     "UOB-GNB",
+    "HDDT",
     
     # "HDWE-GNB",
     # "HDWE-MLP",
