@@ -1,7 +1,8 @@
 import numpy as np
 from utils.plotting import plot, save_plot
-from utils.ranking import t_student, calc_ranks
+from utils.statistictest import calc_ranks, friedman_test
 import Orange
+import os
 
 # Copy these values from experiment, it has to be the same to correctly load files 
 clf_names = [
@@ -79,13 +80,15 @@ for drift_id, drift in enumerate(drifts):
                 plot_name = "p_gen_%s_ir%s_%s_rs%s" % (drift, weights, metric_name, random_state)
                 plotfilename_png = "results/experiment2/plots/gen/%s/%s/%s.png" % (drift, metric_name, plot_name)
                 plotfilename_eps = "results/experiment2/plots/gen/%s/%s/%s.eps" % (drift, metric_name, plot_name)
+                if not os.path.exists("results/experiment2/plots/gen/%s/%s/" % (drift, metric_name)):
+                    os.makedirs("results/experiment2/plots/gen/%s/%s/" % (drift, metric_name))
                 for clf_id, clf_name in enumerate(clf_names):
                     try:
                         # Load data from file
                         filename = "results/experiment2/metrics/gen/%s/%s/%s/%s.csv" % (drift, s_name, metric_name, clf_name)
                         plot_data = np.genfromtxt(filename, delimiter=',', dtype=np.float32)
                         # Plot metrics of each stream
-                        plot_object = plot(plot_data, clf_name, sigma)
+                        # plot_object = plot(plot_data, clf_name, sigma)
                         
                         # Save average of scores into mean_scores, 1 stream = 1 avg
                         scores = plot_data.copy()
@@ -93,21 +96,26 @@ for drift_id, drift in enumerate(drifts):
                         mean_scores[metric_id, stream_id, clf_id] = mean_score
                     
                     except IOError:
-                         print("File", filename, "not found")
-                         # continue if file not found
+                        # print("File", filename, "not found")
+                        print("File not found")
+                        # continue if file not found
                     
                 # Save plots of metrics of each stream
-                save_plot(plot_object, drift, metric_name, metric_a, n_chunks, plotfilename_png, plotfilename_eps)
-
-
+                # save_plot(plot_object, drift, metric_name, metric_a, n_chunks, plotfilename_png, plotfilename_eps)
             
 # print("\nMean scores:\n", mean_scores)
-# p_values, t_statistics = t_student(metric_names, metric_alias, mean_scores, clf_names)
 
-# CD diagrams to compare base classfiers with each other
-# for metric_id, metric_a in enumerate(metric_alias):
-#     ranks, mean_ranks = calc_ranks(mean_scores, metric_id)
-#     fnames = [('results/experiment2/plot_ranks/cd_%s.png' % metric_a), ('results/experiment2/plot_ranks/cd_%s.eps' % metric_a)]
-#     cd = Orange.evaluation.compute_CD(mean_ranks, n_streams, test='nemenyi') 
-#     for fname in fnames:
-#         Orange.evaluation.graph_ranks(mean_ranks, clf_names, cd=cd, width=6, textspace=1.5, filename=fname)
+for metric_id, metric_a in enumerate(metric_alias):
+    ranks, mean_ranks = calc_ranks(mean_scores, metric_id)
+    critical_difference = Orange.evaluation.compute_CD(mean_ranks, n_streams, test='nemenyi') 
+    
+    # Friedman test, implementation from Demsar2006
+    print("\n", metric_a)
+    friedman_test(clf_names, mean_ranks, n_streams, critical_difference)
+    
+    # CD diagrams to compare base classfiers with each other based on Nemenyi test (post-hoc)
+    fnames = [('results/experiment2/plot_ranks/cd_%s.png' % metric_a), ('results/experiment2/plot_ranks/cd_%s.eps' % metric_a)]
+    if not os.path.exists('results/experiment2/plot_ranks/'):
+        os.makedirs('results/experiment2/plot_ranks/')
+    for fname in fnames:
+        Orange.evaluation.graph_ranks(mean_ranks, clf_names, cd=critical_difference, width=6, textspace=1.5, filename=fname)
