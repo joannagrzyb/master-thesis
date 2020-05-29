@@ -89,7 +89,7 @@ for drift_id, drift in enumerate(drifts):
                         filename = "results/experiment3a/metrics/gen/%s/%s/%s/%s.csv" % (drift, s_name, metric_name, clf_name)
                         plot_data = np.genfromtxt(filename, delimiter=',', dtype=np.float32)
                         # Plot metrics of each stream
-                        plot_object = plot(plot_data, clf_name, sigma)
+                        # plot_object = plot(plot_data, clf_name, sigma)
                         
                         # Save average of scores into mean_scores, 1 stream = 1 avg
                         scores = plot_data.copy()
@@ -97,12 +97,12 @@ for drift_id, drift in enumerate(drifts):
                         mean_scores[metric_id, stream_id, clf_id] = mean_score
                     
                     except IOError:
-                        print("File", filename, "not found")
-                        # print("File not found")
+                        # print("File", filename, "not found")
+                        print("File not found")
                         # continue if file not found
                     
                 # Save plots of metrics of each stream
-                save_plot(plot_object, drift, metric_name, metric_a, n_chunks, plotfilename_png, plotfilename_eps)
+                # save_plot(plot_object, drift, metric_name, metric_a, n_chunks, plotfilename_png, plotfilename_eps)
             
 # print("\nMean scores:\n", mean_scores)
 
